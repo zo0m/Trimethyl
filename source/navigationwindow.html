@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='UIFactory-NavigationWindow'>/**
+</span> * @class  	UIFactory.NavigationWindow
+ * @author  Flavio De Stefano &lt;flavio.destefano@caffeinalab.com&gt;
+ *
+ * Simple stack of `Ti.UI.iOS.NavigationWindow`
+ */
+
+function NavigationWindow(args) {
+	this.windows = [];
+	this.window = args.window || null;
+}
+
+NavigationWindow.prototype.open = function(opt) {
+	if (this.window == null) {
+		Ti.API.error(&#39;UIFactory.NavigationWindow: no window defined in NavigationWindow&#39;);
+		return false;
+	}
+
+	this.openWindow(this.window, opt);
+};
+
+NavigationWindow.prototype.close = function(callback) {
+	var self = this;
+
+	(function _close() {
+		if (self.windows.length === 0) {
+			if (_.isFunction(callback)) callback();
+			return;
+		}
+
+		var w = self.windows.pop();
+		w.removeEventListener(&#39;close&#39;, w.__onClose);
+		w.addEventListener(&#39;close&#39;, _close);
+		w.close({ animated: false });
+	})();
+};
+
+NavigationWindow.prototype.openWindow = function(window, opt) {
+	var self = this;
+	opt = opt || {};
+
+	window.navigationIndex = this.windows.length;
+	window.__onClose = function() {
+		self.windows.splice(window.navigationIndex, 1);
+		self.window = _.last(self.windows);
+	};
+	window.addEventListener(&#39;close&#39;, window.__onClose);
+
+	this.windows.push(window);
+	this.window = window;
+
+	opt.modal = false; // set anyway to false to prevent heavyweight windows
+	this.window.open(opt);
+};
+
+NavigationWindow.prototype.closeWindow = function(window) {
+	window.close();
+};
+
+NavigationWindow.prototype.getWindow = function() {
+	return this.window;
+};
+
+_.each([
+	&#39;animate&#39;,
+	&#39;addEventListener&#39;,
+	&#39;applyProperties&#39;,
+	&#39;convertPointToView&#39;,
+	&#39;fireEvent&#39;,
+	&#39;hide&#39;,
+	&#39;remove&#39;,
+	&#39;show&#39;,
+	&#39;toImage&#39;,
+
+	&#39;setBackgroundColor&#39;,
+	&#39;setBackgroundImage&#39;,
+	&#39;setBackgroundRepeat&#39;,
+	&#39;setBorderColor&#39;,
+	&#39;setBorderRadius&#39;,
+	&#39;setBorderWidth&#39;,
+	&#39;setFullscreen&#39;,
+	&#39;setHeight&#39;,
+	&#39;setHorizontalWrap&#39;,
+	&#39;setLayout&#39;,
+	&#39;setOpacity&#39;,
+	&#39;setOrientationModes&#39;,
+	&#39;setTouchEnabled&#39;,
+	&#39;setTransform&#39;,
+	&#39;setVisible&#39;,
+
+	&#39;getBackgroundColor&#39;,
+	&#39;getBackgroundImage&#39;,
+	&#39;getBackgroundRepeat&#39;,
+	&#39;getBorderColor&#39;,
+	&#39;getBorderRadius&#39;,
+	&#39;getBorderWidth&#39;,
+	&#39;getFullscreen&#39;,
+	&#39;getHeight&#39;,
+	&#39;getHorizontalWrap&#39;,
+	&#39;getLayout&#39;,
+	&#39;getOpacity&#39;,
+	&#39;getOrientationModes&#39;,
+	&#39;getTouchEnabled&#39;,
+	&#39;getTransform&#39;,
+	&#39;getVisible&#39;
+], function(method) {
+	NavigationWindow.prototype[method] = function() {
+		return this.window[method].apply(this.window, arguments);
+	};
+});
+
+// Extension
+
+NavigationWindow.prototype.getWindowsStack = function() {
+	return this.windows;
+};
+
+module.exports = NavigationWindow;</pre>
+</body>
+</html>
